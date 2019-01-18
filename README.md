@@ -74,7 +74,7 @@ N= not a store and forward trip
 
 
 ## Tech Stack
-S3, Python, Spark, Cassandra, Kafka, SQL
+S3, Python, Spark, Kafka/Pulsar, Redshift, Spark-Streaming, MySQL
 
 
 ## Engineering Challenge
