@@ -71,6 +71,8 @@ This flag indicates whether the trip record was held in vehicle memory before se
 Y= store and forward trip
 N= not a store and forward trip
 
+
+
 ## Tech Stack
 S3, Python, Spark, Cassandra, Kafka, SQL
 
