@@ -1,5 +1,5 @@
 # Realtime-Ride-Sharing
-Realtime ride matching with fellow commuters.
+Location BAsed Realtime Ride Matching Platform
 
 ## Business Value
 
