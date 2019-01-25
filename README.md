@@ -9,7 +9,7 @@ Two top reasons that are keeping commuters away from car pooling.
 1. Hassle of planning
 2. Changes in schedule.
 
-This platform will elimite these two concerns by matching at real time. There by making car pooling more pleasent. 
+This platform will elimite these two concerns by matching at real time. There by making car pooling more pleasent while saving commute costs by as much as 50%. 
 
 ## Data
 
