@@ -3,7 +3,13 @@ Realtime ride matching with fellow commuters.
 
 ## Business Value
 
-Car pool planning is stressful, with lot of back and forth communication. Even then, the probability of pooler showing up is less. This solution removes the frustration of planning and increases the odds of pool execution.
+Lot of people commute everyday, but only a small percentage of them car pool. 
+Two top reasons that are keeping commuters away from car pooling.
+
+1. Hassle of planning
+2. Changes in schedule.
+
+This platform will elimite these two concerns by matching at real time. There by making car pooling more pleasent. 
 
 ## Data
 
