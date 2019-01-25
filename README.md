@@ -80,7 +80,7 @@ N= not a store and forward trip
 
 
 ## Tech Stack
-S3, Python, Spark, Kafka/Pulsar, Redshift, Spark-Streaming, MySQL
+S3, Python, Spark, Kafka/Pulsar, Redshift, Spark-Streaming, PostgreSQL
 
 
 ## Engineering Challenge
