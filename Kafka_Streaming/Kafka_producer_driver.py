@@ -61,45 +61,13 @@ for obj in bucket.objects.all():
 
                 str_fmt = "{};{};{};{};{};{}"
                 message_info = str_fmt.format(trip_id,
-                                              start_point[0],
-                                              start_point[1],
+                                              int_point[0],
+                                              int_point[1],
                                               end_point[0],
                                               end_point[1],
                                               "In Progress"
                                               )
 
                 print(message_info)
-                producer.send('driver_location', message_info.encode('utf8'))
+                producer.send('driver_location', message_info.encode('utf8 '))
 
-
-        #
-# class Producer(object):
-#
-#     def __init__(self):
-#         self.producer = KafkaProducer(bootstrap_servers= 'ec2-52-32-41-146.us-west-2.compute.amazonaws.com:9092')
-#         self.client = boto3.client('s3')
-#         self.resource = boto3.resource('s3')
-#         self.my_bucket = self.resource.Bucket('nyc-tlc')
-#
-#     def produce_msgs(self):
-#         obj = self.client.get_object(Bucket='my-bucket', Key='/trip\ data/yellow_tripdata_2018-06.csv')
-#         trips = pd.read_csv(obj['Body'])
-#
-#         msg_cnt = 0
-#         for trip in trips:
-#             time_field = datetime.now().strftime("%Y%m%d %H%M%S")
-#             str_fmt = "{};{};{};{}"
-#             message_info = str_fmt.format('yellow',
-#                                           time_field,
-#                                           price_field,
-#                                           volume_field)
-# #            print message_info
-#             self.producer.send('price_data_part4', message_info)
-#             msg_cnt += 1
-#
-# if __name__ == "__main__":
-#     # args = sys.argv
-#     # ip_addr = str(args[1])
-#     # partition_key = str(args[2])
-#     prod = Producer()
-#     prod.produce_msgs()
