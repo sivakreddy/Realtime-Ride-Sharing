@@ -2,4 +2,5 @@
 
 
 config.ini
-.idea/
+/.idea
+.gitignore
