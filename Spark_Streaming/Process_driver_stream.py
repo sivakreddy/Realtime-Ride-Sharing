@@ -72,7 +72,7 @@ def main():
     sparkStreamingContext = StreamingContext(sparkContext, 1)
     kafka_params = config('kafka')
     # create DStream that reads from kafka topic
-    kafkaStream = KafkaUtils.createDirectStream(sparkStreamingContext, kafka_params['driver_topic'],
+    kafkaStream = KafkaUtils.createDirectStream(sparkStreamingContext, [kafka_params['driver_topic']],
                                                 {'metadata.broker.list': kafka_params['broker']})
     # parse the row into separate components
     driver_data_stream = kafkaStream.map(lambda line: line[1].split(";"))
