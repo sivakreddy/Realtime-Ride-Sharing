@@ -1,96 +1,114 @@
 # Realtime-Ride-Sharing
-Location BAsed Realtime Ride Matching Platform
+Location Based Realtime Ride Matching Platform
 
 ## Business Value
 
-Lot of people commute everyday, but only a small percentage of them car pool. 
-Two top reasons that are keeping commuters away from car pooling.
+120 Million of people commute everyday in USA, but only a 22% of them car pool. 
+Top reason that is keeping commuters away from car pooling.
 
-1. Hassle of planning
-2. Changes in schedule.
+1. Hassle of planning and co-ordination
 
-This platform will elimite these two concerns by matching at real time. There by making car pooling more pleasent while saving commute costs by as much as 50%. 
+This platform will elimite these two concerns by matching at real time. There by, making car pooling more pleasent while saving commute costs by as much as 50%. 
 
 ## Data
 
-NYC Dataset has co-ordinates of source and destination. 
+I used primarily two datasets.
 
+[NYC taxi Dataset](https://registry.opendata.aws/nyc-tlc-trip-records-pds/)
 
-https://console.cloud.google.com/bigquery?supportedpurview=project&angularJsUrl=%2Fprojectselector%2Fbigquery%3Fp%3Dbigquery-public-data%26d%3Dnew_york_taxi_trips%26page%3Ddataset%26supportedpurview%3Dproject&creatingProject&project=my-project-ride-sharing&p=bigquery-public-data&d=new_york_taxi_trips&t=tlc_yellow_trips_2018&page=table
+[OSM Dataset](http://download.geofabrik.de/north-america.html)
+
 
 ### Schema
 
-vendor_id	STRING	NULLABLE	
-A designation for the technology vendor that provided the record.
-CMT=Creative Mobile Technologies
-VTS= VeriFone, Inc.
-DDS=Digital Dispatch Systems
-pickup_datetime	TIMESTAMP	NULLABLE	
-The date and time when the meter was engaged.
-dropoff_datetime	TIMESTAMP	NULLABLE	
-The date and time when the meter was disengaged.
-pickup_longitude	FLOAT	NULLABLE	
-Longitude where the meter was engaged.
-pickup_latitude	FLOAT	NULLABLE	
-Latitude where the meter was engaged.
-dropoff_longitude	FLOAT	NULLABLE	
-Longitude where the meter was disengaged.
-dropoff_latitude	FLOAT	NULLABLE	
-Latitude where the meter was disengaged.
-rate_code	STRING	NULLABLE	
-The final rate code in effect at the end of the trip.
-1= Standard rate
-2=JFK
-3=Newark
-4=Nassau or Westchester
-5=Negotiated fare
-6=Group ride
-passenger_count	INTEGER	NULLABLE	
-The number of passengers in the vehicle.  
+trips table contains all yellow and green taxi trips. Each trip has a `cab_type_id`, which references the `cab_types` table and refers to one of yellow or green. 
+It has foollowing columns for geolocation:
 
-This is a driver-entered value.
-trip_distance	FLOAT	NULLABLE	
-The elapsed trip distance in miles reported by the taximeter.
-payment_type	STRING	NULLABLE	
-A numeric code signifying how the passenger paid for the trip. 
-CRD= Credit card
-CSH= Cash
-NOC= No charge
-DIS= Dispute
-UNK= Unknown
-fare_amount	FLOAT	NULLABLE	
-The time-and-distance fare calculated by the meter.
-extra	FLOAT	NULLABLE	
-Miscellaneous extras and surcharges.  Currently, this only includes the $0.50 and $1 rush hour and overnight charges.
-mta_tax	FLOAT	NULLABLE	
-$0.50 MTA tax that is automatically triggered based on the metered rate in use.
-imp_surcharge	FLOAT	NULLABLE	
-$0.30 improvement surcharge assessed on trips at the flag drop. The improvement surcharge began being levied in 2015.
-tip_amount	FLOAT	NULLABLE	
-Tip amount – This field is automatically populated for credit card tips. Cash tips are not included.
-tolls_amount	FLOAT	NULLABLE	
-Total amount of all tolls paid in trip.
-total_amount	FLOAT	NULLABLE	
-The total amount charged to passengers. Does not include cash tips.
-store_and_fwd_flag	STRING	NULLABLE	
-This flag indicates whether the trip record was held in vehicle memory before sending to the vendor, aka “store and forward,” because the vehicle did not have a connection to the server. 
-Y= store and forward trip
-N= not a store and forward trip
+1. `pickup_longitude`
+2. `pickup_latitude`
+3. `dropoff_longitude`
+4. `dropoff_latitude`
 
+`taxi_zones` table contains the TLC's official taxi zone boundaries. Starting in July 2016, the TLC no longer provides pickup and dropoff coordinates. Instead, each trip comes with taxi zone pickup and dropoff location IDs
 
+### Data issues
 
-## Tech Stack
-S3, Python, Spark, Kafka/Pulsar, Redshift, Spark-Streaming, PostgreSQL
+#### NYC taxi data
+* Remove carriage returns and empty lines from TLC data. 
+* Some raw data files have extra columns with empty data, had to create dummy columns junk1 and junk2 to absorb them
+* Two of the yellow taxi raw data files had a small number of rows containing extra columns. I discarded these rows
+* The official NYC neighborhood tabulation areas (NTAs) included in the census tracts shapefile are not exactly what I would have expected. Some of them are bizarrely large and contain more than one neighborhood, e.g. "Hudson Yards-Chelsea-Flat Iron-Union Square", while others are confusingly named, e.g. "North Side-South Side" for what I'd call "Williamsburg", and "Williamsburg" for what I'd call "South Williamsburg". In a few instances I modified NTA names, but I kept the NTA geographic definitions
+
+#### OSM data
+* OSM data is very large, so I downloaded it only for states NY, NJ,CT. Again I need maps only for NYC area. So, I used `osmosis` to select maps data within specific boundaries
+
+```
+osmosis \
+  --read-xml new-jersey-latest.osm --tee 1 \
+  --bounding-box left=-74.584213\
+ top=41.189624 \
+ bottom=40.472283 \
+ right=-71.757647 \
+--write-xml NYC-box-NJ.osm
+```
+* Each state data is too large to load into Postgres. So I had to split them into multiple small files
+```
+osmosis \
+  --read-xml NYC-box-NJ --tee 4 \
+  --bounding-box left=-74.543049\
+ top=40.611474 \
+ --write-xml new-jersey-SE.osm \
+  --bounding-box left=-74.543049 \
+ bottom=40.611474 \
+ --write-xml new-jersey-NE.osm \
+  --bounding-box right=-74.543049 \
+ top=40.611474 \
+ --write-xml new-jersey-SW.osm \
+  --bounding-box right=-74.543049 \
+ bottom=40.611474 \
+ --write-xml new-jersey-NW.osm
+```
+## Data Pipeline
+
+![alt text](https://github.com/sivakreddy/Realtime-Ride-Sharing/blob/master/Screen%20Shot%202019-02-19%20at%208.37.33%20AM.png)
+
+#### Data Ingestion
+
+* NYC taxi dataset is in S3. I am using this data to simulate moving drivers and rider requests. I am generating location stream using python, Kafka. 
+
+#### Data Processing
+
+* Spark Stream will process the incoming stream and store data to PostgreSQL. Spark will store driver location data to PostgreSQL and process rider requests to match with nearest driver using PostGIS and PGRouting.
+
+#### Data Storage
+
+* Data is stored into PostgreSQL database, it also user extensions PostGIS and PGrouting extensions. 
+
+#### User INterface
+
+* UI is developed in Flask to display matched trips. It user google api to display the location and routes in UI.
+
+#### Teck stack
+
+* S3, Python, Kafka, Spark-Streaming, PostgreSQL
 
 
 ## Engineering Challenge
 
-Data Preperation
-Realtime streaming.
-Matching Algorithm
-Analytics on huge data generated.
+* Maps data Preperation: I used osmosis and osm2pgrouting for slicing and loading maps data into PostgreSQL
+* Driving distance calculation: I used dijkstra algorithm.
+* Matching Algorithm: Driver is matched based on least detour distance.
+* Processing huge data: NYC taxi dataset has 1.1 Billion trips.
 
 
-## MVP
+## UI Output
 
-Streaming data, matching algorithm and matched data.
+User interface show matched trips in google maps real-time.
+
+![alt text](https://github.com/sivakreddy/Realtime-Ride-Sharing/blob/master/Screen%20Shot%202019-02-18%20at%207.44.09%20PM.png)
+
+## Further Enhancements
+
+* Ability to match multiple riders with a driver
+* Moving data to PostgresXL for data warehousing.
+* Mobile app for Driver and Rider
