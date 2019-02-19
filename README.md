@@ -68,7 +68,28 @@ osmosis \
  bottom=40.611474 \
  --write-xml new-jersey-NW.osm
 ```
-## Tech Stack
+## Data Pipeline
+
+![alt text](https://github.com/sivakreddy/Realtime-Ride-Sharing/blob/master/Screen%20Shot%202019-02-19%20at%208.37.33%20AM.png)
+
+#### Data Ingestion
+
+NYC taxi dataset is in S3. I am using this data to simulate moving drivers and rider requests. I am generating location stream using python, Kafka. 
+
+#### Data Processing
+
+Spark Stream will process the incoming stream and store data to PostgreSQL. Spark will store driver location data to PostgreSQL and process rider requests to match with nearest driver using PostGIS and PGRouting.
+
+#### Data Storage
+
+Data is stored into PostgreSQL database, it also user extensions PostGIS and PGrouting extensions. 
+
+#### User INterface
+
+UI is developed in Flask to display matched trips. It user google api to display the location and routes in UI.
+
+#### Teck stack
+
 S3, Python, Kafka, Spark-Streaming, PostgreSQL
 
 
