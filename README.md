@@ -97,6 +97,16 @@ osmosis \
 
 * Maps data Preperation: I used osmosis and osm2pgrouting for slicing and loading maps data into PostgreSQL
 * Driving distance calculation: I used dijkstra algorithm to minimise cost on the edge to get least driving distance
+```
+                SELECT sum(cost) FROM pgr_dijkstra(
+                'SELECT gid AS id,
+                     source,
+                     target,
+                     cost_s AS cost,
+                    FROM ways',
+                %s,%s, directed := true);
+```
+
 * Matching Algorithm: Driver is matched based on least detour distance.
 * Processing huge data: NYC taxi dataset has 1.1 Billion trips. Data issues were explained in a section above.
 
