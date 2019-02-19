@@ -8,7 +8,7 @@ from configparser import ConfigParser
 
 
 
-
+# Formatting Kafka message so it can be consumer
 def format_message(trip_id, start_location,current_location, end_location, status):
     str_fmt = "{};{};{};{};{};{};{};{}"
     message = str_fmt.format(trip_id,
@@ -20,12 +20,14 @@ def format_message(trip_id, start_location,current_location, end_location, statu
                              end_location[1],
                              status
                              )
-    print(message)
+    # print(message)
     return message
 
+# Getting intermediate points to simulate driving car
 def getEquidistantPoints(p1, p2, parts):
     return zip(numpy.linspace(p1[0], p2[0], parts+1), numpy.linspace(p1[1], p2[1], parts+1))
 
+#Method to read config file to fetch system parameters
 def config(section):
     # create a parser
     parser = ConfigParser()
@@ -52,36 +54,40 @@ def main():
     # is an ObjectSummary, so it doesn't contain the body. You'll need to call
     # get to get the whole body.
     kafka_params = config('kafka')
+    dataset_params = config('dataset')
     producer = KafkaProducer(bootstrap_servers=kafka_params['broker'])
+
+
+
     for obj in bucket.objects.all():
         key = obj.key
-        # body = obj.get()['Body'].read()
-        iterlines = iter(smart_open('s3://nyc-tlc/trip data/green_tripdata_2013-08.csv'))
-        next(iterlines)
+        print(key)
+        if dataset_params['driver'] not in key:
+            continue
+        #building absolute file name
+        file_name = 's3://nyc-tlc/' + key
+        #skipping header
         firstline = True
+        # Processing each row in file
+        for line in smart_open(file_name):
 
-        for line in smart_open('s3://nyc-tlc/trip data/green_tripdata_2013-08.csv'):
-            # if line.decode('utf8') == '/n/r':
-            #     continue
-            print(line.decode('utf8'))
+            # print(line.decode('utf8'))
             if firstline:  # skip first line
                 firstline = False
                 continue
 
-
             line_split = line.decode('utf8').split(",")
-            print(line_split)
-            if len(line_split) < 20:
+            if len(line_split) < 20: #Skipping rows with large number of columns
                 continue
             if line_split[5] == '0' or line_split[6] == '0' or line_split[7] == '0' or line_split[8] == '0':
                 continue
             else:
                 start_point = (float(line_split[5]),float(line_split[6]))
                 end_point = (float(line_split[7]), float(line_split[8]))
-                print(start_point, end_point)
+                # print(start_point, end_point)
                 intermediate_points = getEquidistantPoints(start_point, end_point, 100)
-                print(intermediate_points)
-
+                # print(intermediate_points)
+                #message when trip is started
                 trip_id = 'drive:' + str(datetime.now()) + ":" + str(random.randint(1, 1000))
                 formatted_message = format_message(trip_id,
                                                    start_point,
@@ -89,10 +95,10 @@ def main():
                                                    end_point,
                                                    "New")
 
-                producer.send('driver_location', formatted_message.encode('utf8 '))
-
+                producer.send(kafka_params['driver_topic'], formatted_message.encode('utf8 '))
+                #Simulating moving car by sending intermediate points
                 for int_point in intermediate_points:
-                    print(int_point)
+                    # print(int_point)
 
                     formatted_message = format_message(trip_id,
                                                        start_point,
@@ -100,14 +106,14 @@ def main():
                                                        end_point,
                                                        "In Progress")
 
-                    producer.send('driver_location', formatted_message.encode('utf8 '))
-
+                    producer.send(kafka_params['driver_topic'], formatted_message.encode('utf8 '))
+                #Ending the driver trip
                 formatted_message = format_message(trip_id,
                                                    start_point,
                                                    end_point,
                                                    end_point,
                                                    "Closed")
-
+                print(formatted_message.encode('utf8 '))
                 producer.send(kafka_params['driver_topic'], formatted_message.encode('utf8 '))
 
 

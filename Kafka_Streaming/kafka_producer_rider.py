@@ -6,9 +6,8 @@ from smart_open import smart_open
 import numpy
 from configparser import ConfigParser
 
-def getEquidistantPoints(p1, p2, parts):
-    return zip(numpy.linspace(p1[0], p2[0], parts+1), numpy.linspace(p1[1], p2[1], parts+1))
 
+#method to read config file
 def config(section):
     # create a parser
     parser = ConfigParser()
@@ -36,18 +35,21 @@ def main():
     # get to get the whole body.
 
     kafka_params = config('kafka')
+    dataset_params = config('dataset')
     producer = KafkaProducer(bootstrap_servers=kafka_params['broker'])
 
     for obj in bucket.objects.all():
         key = obj.key
-        # body = obj.get()['Body'].read()
-        iterlines = iter(smart_open('s3://nyc-tlc/trip data/green_tripdata_2013-09.csv'))
-        next(iterlines)
+        if dataset_params['rider'] not in key:
+            continue
+        # building absolute file name
+        file_name = 's3://nyc-tlc/' + key
+        ##skipping header
         firstline = True
 
-        for line in smart_open('s3://nyc-tlc/trip data/green_tripdata_2013-09.csv'):
-            # if line.decode('utf8') == '/n/r':
-            #     continue
+        #processing the file
+        for line in smart_open(file_name):
+
             print(line.decode('utf8'))
             if firstline:  # skip first line
                 firstline = False
@@ -56,7 +58,7 @@ def main():
 
             line_split = line.decode('utf8').split(",")
             print(line_split)
-            if len(line_split) < 20:
+            if len(line_split) < 20: #skipping rows with huge number of columns
                 continue
             if line_split[5] == '0' or line_split[6] == '0' or line_split[7] == '0' or line_split[8] == '0':
                 continue
@@ -65,12 +67,8 @@ def main():
                 end_point = (float(line_split[7]), float(line_split[8]))
                 print(start_point, end_point)
 
-
                 trip_id =  'ride:' + str(datetime.now()) + ":" + str(random.randint(1, 1000))
-
-
-
-
+                #formatting the message
                 str_fmt = "{};{};{};{};{};{}"
                 message_info = str_fmt.format(trip_id,
                                               start_point[0],

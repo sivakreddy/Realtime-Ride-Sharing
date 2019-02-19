@@ -94,42 +94,9 @@
     function calculateAndDisplayRoute(directionsService, directionsDisplay) {
       var waypts = [];
       var myTrips = {{ trips|tojson}};
-      // let myTrips = 
-      // [
-
-      //   {
-      //     "driver_start_lat": 40.7503852844238,
-      //     "driver_start_long": -73.9403915405273,
-      //     "rider_start_lat": 40.7617034912109,
-      //     "rider_start_long": -73.9250411987305,
-      //     "rider_end_lat": 40.7362823486328,
-      //     "rider_end_long": -73.8786087036133,
-      //     "driver_end_long": -73.9043731689453,
-      //     "driver_end_lat": 40.771671295166,
-      //   },
-      //   {
-      //     "rider_end_lat": 40.6970367431641,
-      //     "rider_end_long": -73.8567428588867,
-      //     "rider_start_lat": 40.7564506530762,
-      //     "driver_end_long": -73.9134750366211,
-      //     "rider_start_long": -73.9295043945312,
-      //     "driver_end_lat": 40.7460327148438,
-      //     "driver_start_lat": 40.766357421875,
-      //     "driver_start_long": -73.9201431274414
-      //   }, {
-      //     "rider_end_lat": 40.7721366882324,
-      //     "rider_end_long": -73.8355178833008,
-      //     "rider_start_lat": 40.7593536376953,
-      //     "driver_end_long": -73.8330917358398,
-      //     "rider_start_long": -73.8306655883789,
-      //     "driver_end_lat": 40.7621574401855,
-      //     "driver_start_lat": 40.7122611999512,
-      //     "driver_start_long": -73.8256607055664
-      //   }
-      // ];
 
 
-      //var myTrips = JSON.parse(trips);
+
       console.log(myTrips)
       console.log(myTrips)
       for (var i = 0; i < myTrips.length; i++) {

@@ -6,6 +6,7 @@ from pyspark.sql import SQLContext
 import psycopg2
 from configparser import ConfigParser
 
+#method to read config file for system parameters
 def config(section):
     # create a parser
     parser = ConfigParser()
@@ -24,6 +25,7 @@ def config(section):
 
     return config_params
 
+#Connection to PostgreSQL
 def build_postgres_connection():
 
     try:
@@ -35,7 +37,7 @@ def build_postgres_connection():
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
 
-
+#Getting nearest node to the location
 def nearest_node(cursor, long,lat):
     query = """
             SELECT source from ways order by  the_geom <-> ST_SetSrid(ST_MakePoint(%s, %s), 4326) limit 1;
@@ -45,6 +47,7 @@ def nearest_node(cursor, long,lat):
     node_list = cursor.fetchall()
     return node_list[0][0]
 
+#Calculating driving distance between two nodes
 def calc_driving_distance(cursor, start_node,end_node):
     if start_node == end_node:
         return 0
@@ -70,13 +73,14 @@ def calc_driving_distance(cursor, start_node,end_node):
         except Exception as err:
             return 9999999999999
 
+#processing rider stream to match with driver
 def process_rider_messages(rdd):
     connection = build_postgres_connection()
     cursor = connection.cursor()
 
     for line in rdd:
         trip_id, start_location_long, start_location_lat, end_location_long, end_location_lat, status = line[:]
-
+        #finding nearest three drivers
         query = """
                 select trip_id, (ST_Distance(driver_location, 'SRID=4326;POINT(%s %s)') + 
                 ST_Distance(driver_destination, 'SRID=4326;POINT(%s %s)')) as total_distance,
@@ -98,17 +102,17 @@ def process_rider_messages(rdd):
         for driver in nearest_drivers:
             d_trip_id, d_total_distance, d_start_long, d_start_lat, d_end_long, d_end_lat = driver[:]
 
-            d_start_node = nearest_node(cursor, float(d_start_long),float(d_start_lat))
-            d_end_node = nearest_node(cursor, float(d_end_long), float(d_end_lat))
-            r_start_node = nearest_node(cursor, float(start_location_long),float(start_location_lat))
-            r_end_node = nearest_node(cursor, float(end_location_long), float(end_location_lat))
+            d_start_node = nearest_node(cursor, float(d_start_long),float(d_start_lat)) #driver start node
+            d_end_node = nearest_node(cursor, float(d_end_long), float(d_end_lat)) #driver end node
+            r_start_node = nearest_node(cursor, float(start_location_long),float(start_location_lat)) #rider start node
+            r_end_node = nearest_node(cursor, float(end_location_long), float(end_location_lat)) #rider end node
 
-            # print(d_start_node,d_end_node,r_start_node,r_end_node)
-            d_original_distance = calc_driving_distance(cursor,d_start_node, d_end_node)
-            d_new_distance = calc_driving_distance(cursor,d_start_node, r_start_node) \
+
+            d_original_distance = calc_driving_distance(cursor,d_start_node, d_end_node) #Driver original driving distance
+            d_new_distance = calc_driving_distance(cursor,d_start_node, r_start_node) \ #Driving distance if ride is matched
                              + calc_driving_distance(cursor, r_start_node,r_end_node) \
                              + calc_driving_distance(cursor, r_end_node, d_end_node)
-            detour_distance = d_new_distance - d_original_distance
+            detour_distance = d_new_distance - d_original_distance #detour distance
             # print(detour_distance)
             if detour_distance < best_detour:
                 best_match_driver = driver
@@ -116,7 +120,7 @@ def process_rider_messages(rdd):
             print(best_detour)
 
         # print(best_match_driver)
-        if best_match_driver is not None:
+        if best_match_driver is not None: #Insrting matched trip
             query = """
                     INSERT INTO \"rider_requests\" VALUES (%s, 'SRID=4326;POINT(%s %s)', 'SRID=4326;POINT(%s %s)', \
                      'SRID=4326;POINT(%s %s)','SRID=4326;POINT(%s %s)', %s,%s,%s,%s,%s,%s,%s,%s,%s,%s)

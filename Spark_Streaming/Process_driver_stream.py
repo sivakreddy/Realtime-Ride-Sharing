@@ -4,6 +4,7 @@ from pyspark.streaming.kafka import KafkaUtils
 import psycopg2
 from configparser import ConfigParser
 
+#method to read config file for system parameters
 def config(section):
     # create a parser
     parser = ConfigParser()
@@ -22,6 +23,7 @@ def config(section):
 
     return config_params
 
+#Connection to PostgreSQL
 def build_postgres_connection():
 
     try:
@@ -33,13 +35,14 @@ def build_postgres_connection():
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
 
+
 def process_driver_messages(rdd):
     connection = build_postgres_connection()
     cursor = connection.cursor()
     for line in rdd:
         trip_id, start_location_long, start_location_lat,current_location_long, current_location_lat, \
             end_location_long, end_location_lat, status = line[:]
-
+        #Inserting new trip into postgres
         if status == 'New':
             query = "INSERT INTO \"driver_location\" VALUES (%s, 'SRID=4326;POINT(%s %s)', \
             'SRID=4326;POINT(%s %s)', %s, 'SRID=4326;POINT(%s %s)',%s,%s,%s,%s)"
@@ -49,12 +52,14 @@ def process_driver_messages(rdd):
                     float(start_location_long), float(start_location_lat), float(end_location_long),
                     float(end_location_lat))
             cursor.execute(query, data)
+        #closing the trip
         elif status == 'Done':
             query = "UPDATE \"driver_location\" SET status =  %s \
             where trip_id = %s"
 
             data = (status, trip_id)
             cursor.execute(query, data)
+        #updating current location of driver
         else:
             query = "UPDATE \"driver_location\" SET driver_location =  'SRID=4326;POINT(%s %s)', \
             status = %s where trip_id = %s"
