@@ -1,0 +1,28 @@
+# jsonify creates a json representation of the response
+import psycopg2
+from app import app
+
+
+# Setting up connection to postgres
+def build_postgres_connection():
+    return psycopg2.connect(host='ec2-35-160-87-160.us-west-2.compute.amazonaws.com',
+                            database='gis', user='postgres',
+                            password='berkeley')
+
+connection = build_postgres_connection()
+cursor = connection.cursor()
+
+@app.route('/')
+@app.route('/index')
+def index():
+  return "Hello, World!"
+
+@app.route('/api/<email>/<date>')
+def get_email(email, date):
+       stmt = "SELECT * FROM email WHERE id=%s and date=%s"
+       response = session.execute(stmt, parameters=[email, date])
+       response_list = []
+       for val in response:
+            response_list.append(val)
+       jsonresponse = [{"first name": x.fname, "last name": x.lname, "id": x.id, "message": x.message, "time": x.time} for x in response_list]
+       return jsonify(emails=jsonresponse)
