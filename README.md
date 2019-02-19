@@ -101,8 +101,14 @@ osmosis \
 * Processing huge data: NYC taxi dataset has 1.1 Billion trips.
 
 
-## UI output
+## UI Output
 
 User interface show matched trips in google maps real-time.
 
 ![alt text](https://github.com/sivakreddy/Realtime-Ride-Sharing/blob/master/Screen%20Shot%202019-02-18%20at%207.44.09%20PM.png)
+
+## Furtther Enhancements
+
+* Ability to match multiple riders with a driver
+* Moving data to PostgresXL for data warehousing.
+* Mobile app for Driver and Rider
