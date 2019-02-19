@@ -96,9 +96,9 @@ osmosis \
 ## Engineering Challenge
 
 * Maps data Preperation: I used osmosis and osm2pgrouting for slicing and loading maps data into PostgreSQL
-* Driving distance calculation: I used dijkstra algorithm.
+* Driving distance calculation: I used dijkstra algorithm to minimise cost on the edge to get least driving distance
 * Matching Algorithm: Driver is matched based on least detour distance.
-* Processing huge data: NYC taxi dataset has 1.1 Billion trips.
+* Processing huge data: NYC taxi dataset has 1.1 Billion trips. Data issues were explained in a section above.
 
 
 ## UI Output
