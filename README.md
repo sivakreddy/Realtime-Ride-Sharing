@@ -74,33 +74,35 @@ osmosis \
 
 #### Data Ingestion
 
-NYC taxi dataset is in S3. I am using this data to simulate moving drivers and rider requests. I am generating location stream using python, Kafka. 
+* NYC taxi dataset is in S3. I am using this data to simulate moving drivers and rider requests. I am generating location stream using python, Kafka. 
 
 #### Data Processing
 
-Spark Stream will process the incoming stream and store data to PostgreSQL. Spark will store driver location data to PostgreSQL and process rider requests to match with nearest driver using PostGIS and PGRouting.
+* Spark Stream will process the incoming stream and store data to PostgreSQL. Spark will store driver location data to PostgreSQL and process rider requests to match with nearest driver using PostGIS and PGRouting.
 
 #### Data Storage
 
-Data is stored into PostgreSQL database, it also user extensions PostGIS and PGrouting extensions. 
+* Data is stored into PostgreSQL database, it also user extensions PostGIS and PGrouting extensions. 
 
 #### User INterface
 
-UI is developed in Flask to display matched trips. It user google api to display the location and routes in UI.
+* UI is developed in Flask to display matched trips. It user google api to display the location and routes in UI.
 
 #### Teck stack
 
-S3, Python, Kafka, Spark-Streaming, PostgreSQL
+* S3, Python, Kafka, Spark-Streaming, PostgreSQL
 
 
 ## Engineering Challenge
 
-Data Preperation
-Realtime streaming.
-Matching Algorithm
-Analytics on huge data generated.
+* Maps data Preperation: I used osmosis and osm2pgrouting for slicing and loading maps data into PostgreSQL
+* Driving distance calculation: I used dijkstra algorithm.
+* Matching Algorithm: Driver is matched based on least detour distance.
+* Processing huge data: NYC taxi dataset has 1.1 Billion trips.
 
 
-## MVP
+## UI output
 
-Streaming data, matching algorithm and matched data.
+User interface show matched trips in google maps real-time.
+
+![alt text](https://github.com/sivakreddy/Realtime-Ride-Sharing/blob/master/Screen%20Shot%202019-02-18%20at%207.44.09%20PM.png)
