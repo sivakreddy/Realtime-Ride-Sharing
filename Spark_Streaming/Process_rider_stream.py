@@ -86,8 +86,7 @@ def process_rider_messages(rdd):
                 ST_Distance(driver_destination, 'SRID=4326;POINT(%s %s)')) as total_distance,
                 start_long, start_lat, end_long, end_lat
                 from driver_location 
-                order by (ST_Distance(driver_location, 'SRID=4326;POINT(%s %s)') + 
-                ST_Distance(driver_destination, 'SRID=4326;POINT(%s %s)'))
+                order by total_distance
                 limit 3;
                 """
 
@@ -107,9 +106,10 @@ def process_rider_messages(rdd):
             r_start_node = nearest_node(cursor, float(start_location_long),float(start_location_lat)) #rider start node
             r_end_node = nearest_node(cursor, float(end_location_long), float(end_location_lat)) #rider end node
 
-
-            d_original_distance = calc_driving_distance(cursor,d_start_node, d_end_node) #Driver original driving distance
-            d_new_distance = calc_driving_distance(cursor,d_start_node, r_start_node) \ #Driving distance if ride is matched
+            # Driver original driving distance
+            d_original_distance = calc_driving_distance(cursor,d_start_node, d_end_node)
+            # Driving distance if ride is matched
+            d_new_distance = calc_driving_distance(cursor,d_start_node, r_start_node) \
                              + calc_driving_distance(cursor, r_start_node,r_end_node) \
                              + calc_driving_distance(cursor, r_end_node, d_end_node)
             detour_distance = d_new_distance - d_original_distance #detour distance
@@ -136,7 +136,7 @@ def process_rider_messages(rdd):
                 cursor.execute(query, data)
             except Exception as e:
                 print(e)
-                print(e.pgerroe)
+                print(e.pgerror)
             else:
                 connection.commit()
 
