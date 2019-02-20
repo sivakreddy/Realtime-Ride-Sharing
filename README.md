@@ -108,6 +108,15 @@ osmosis \
 ```
 
 * Matching Algorithm: Driver is matched based on least detour distance.
+
+```
+         select trip_id, (ST_Distance(driver_location, 'SRID=4326;POINT(%s %s)') + 
+                ST_Distance(driver_destination, 'SRID=4326;POINT(%s %s)')) as total_distance,
+                start_long, start_lat, end_long, end_lat
+         from driver_location 
+         order by total_distance
+```
+
 * Processing huge data: NYC taxi dataset has 1.1 Billion trips. Data issues were explained in a section above.
 
 
