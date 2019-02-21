@@ -117,7 +117,14 @@ osmosis \
          order by total_distance
 ```
 
+* Encoding coordinates(longitude lattitude) to geolocation so as to enable GIST index for faster retrieval
+
+```
+"UPDATE \"driver_location\" SET driver_location =  'SRID=4326;POINT(%s %s)', \
+            status = %s where trip_id = %s"
+```
 * Processing huge data: NYC taxi dataset has 1.1 Billion trips. Data issues were explained in a section above.
+
 
 
 ## UI Output
