@@ -138,3 +138,4 @@ User interface show matched trips in google maps real-time.
 * Ability to match multiple riders with a driver
 * Moving data to PostgresXL for data warehousing.
 * Mobile app for Driver and Rider
+* Aumating updates to maps data
