@@ -9,10 +9,37 @@ from app import app
 
 import psycopg2
 
+def config(section):
+    # create a parser
+    parser = ConfigParser()
+    # read config file
+    filename = '../config.ini'
+    parser.read(filename)
+
+    # get section,
+    config_params = {}
+    if parser.has_section(section):
+        params = parser.items(section)
+        for param in params:
+            config_params[param[0]] = param[1]
+    else:
+        raise Exception('Section {0} not found in the {1} file'.format(section, filename))
+
+    return config_params
+
+
 def build_postgres_connection():
-    return psycopg2.connect(host='ec2-35-160-87-160.us-west-2.compute.amazonaws.com',
-                            database='gis', user='postgres',
-                            password='berkeley')
+
+
+    try:
+        db_params = config('postgres')
+        return psycopg2.connect(host=db_params['host'],
+                                database=db_params['database'],
+                                user=db_params['user'],
+                                password=db_params['password'])
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+
 
 # Setting up connections to postgres
 
