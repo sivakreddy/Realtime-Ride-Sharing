@@ -108,7 +108,23 @@ osmosis \
 ```
 
 * Matching Algorithm: Driver is matched based on least detour distance.
+
+```
+         select trip_id, (ST_Distance(driver_location, 'SRID=4326;POINT(%s %s)') + 
+                ST_Distance(driver_destination, 'SRID=4326;POINT(%s %s)')) as total_distance,
+                start_long, start_lat, end_long, end_lat
+         from driver_location 
+         order by total_distance
+```
+
+* Encoding coordinates(longitude lattitude) to geolocation so as to enable GIST index for faster retrieval
+
+```
+"UPDATE \"driver_location\" SET driver_location =  'SRID=4326;POINT(%s %s)', \
+            status = %s where trip_id = %s"
+```
 * Processing huge data: NYC taxi dataset has 1.1 Billion trips. Data issues were explained in a section above.
+
 
 
 ## UI Output
@@ -122,3 +138,4 @@ User interface show matched trips in google maps real-time.
 * Ability to match multiple riders with a driver
 * Moving data to PostgresXL for data warehousing.
 * Mobile app for Driver and Rider
+* Aumating updates to maps data
